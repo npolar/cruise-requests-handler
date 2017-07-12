@@ -10,10 +10,13 @@ def extract_body(payload):
     else:
         return '\n'.join([extract_body(part.get_payload()) for part in payload])
 
-def parse_body(body):
-    pass
+def extract_config_yaml(body):
+    pattern = "---([^-]+)---"
+    config_string = re.findall(pattern, body)
+    yaml_config = yaml.load(config_string[0])
+    return yaml_config
 
-user = getpass.getuser()
+user = getpass.getuser(); print user
 password = getpass.getpass(prompt='Password: ', stream=None)
 
 conn = imaplib.IMAP4_SSL("imap.gmail.com", 993)
@@ -30,8 +33,9 @@ try:
                 print(subject)
                 payload = msg.get_payload()
                 body = extract_body(payload)
-                print(body)
-        typ, response = conn.store(num, '+FLAGS', r'(\Seen)')
+                config = extract_config_yaml(body)
+                print(config)
+                typ, response = conn.store(num, '+FLAGS', r'(\Seen)')
 finally:
     try:
         conn.close()
